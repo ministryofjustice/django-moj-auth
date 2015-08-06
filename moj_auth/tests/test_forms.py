@@ -3,10 +3,10 @@ import mock
 from django.test.testcases import SimpleTestCase
 from django.utils.encoding import force_text
 
-from mtp_auth.forms import AuthenticationForm
+from moj_auth.forms import AuthenticationForm
 
 
-@mock.patch('mtp_auth.forms.authenticate')
+@mock.patch('moj_auth.forms.authenticate')
 class AuthenticationFormTestCase(SimpleTestCase):
     """
     Tests that the AuthenticationForm manages valid/invalid

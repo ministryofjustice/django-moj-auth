@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.test.testcases import SimpleTestCase
 
-from mtp_auth.api_client import REQUEST_TOKEN_URL, authenticate, get_connection
+from moj_auth.api_client import REQUEST_TOKEN_URL, authenticate, get_connection
 
 from .utils import generate_tokens
 
@@ -41,7 +41,6 @@ class AuthenticateTestCase(SimpleTestCase):
             'pk': 1,
             'first_name': 'My First Name',
             'last_name': 'My last name',
-            'prisons': ['prison1']
         }
 
         responses.add(

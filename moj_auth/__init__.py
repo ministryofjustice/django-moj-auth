@@ -4,9 +4,10 @@ from django.contrib.auth import load_backend
 from django.middleware.csrf import rotate_token
 from django.utils.crypto import constant_time_compare
 from django.utils.translation import LANGUAGE_SESSION_KEY
+from django.utils.module_loading import import_string
 
 
-from .models import MtpAnonymousUser
+from .models import MojAnonymousUser, MojUser
 
 SESSION_KEY = '_auth_user_id'
 AUTH_TOKEN_SESSION_KEY = '_auth_user_auth_token'
@@ -58,7 +59,7 @@ def login(request, user):
 def get_user(request):
     """
     Returns the user model instance associated with the given request session.
-    If no user is retrieved an instance of `MtpAnonymousUser` is returned.
+    If no user is retrieved an instance of `MojAnonymousUser` is returned.
     """
     user = None
     try:
@@ -83,7 +84,13 @@ def get_user(request):
                     request.session.flush()
                     user = None
 
-    return user or MtpAnonymousUser()
+    return user or MojAnonymousUser()
+
+def get_user_model():
+    try:
+        return import_string(settings.MOJ_USER_MODEL)
+    except AttributeError:
+        return MojUser
 
 
 def logout(request):
@@ -107,4 +114,4 @@ def logout(request):
         request.session[LANGUAGE_SESSION_KEY] = language
 
     if hasattr(request, 'user'):
-        request.user = MtpAnonymousUser()
+        request.user = MojAnonymousUser()

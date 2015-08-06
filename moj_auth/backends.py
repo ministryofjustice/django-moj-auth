@@ -1,8 +1,6 @@
-from . import api_client
-from .models import MtpUser
+from . import api_client, get_user_model
 
-
-class MtpBackend(object):
+class MojBackend(object):
 
     """
     Django authentication backend which authenticates against the api
@@ -13,16 +11,18 @@ class MtpBackend(object):
 
     def authenticate(self, username=None, password=None):
         """
-        Returns a valid `MtpUser` if the authentication is successful
+        Returns a valid `MojUser` if the authentication is successful
         or None if the credentials were wrong.
         """
         data = api_client.authenticate(username, password)
         if not data:
             return
 
-        return MtpUser(
+        UserModel = get_user_model()
+        return UserModel(
             data.get('pk'), data.get('token'), data.get('user_data')
         )
 
     def get_user(self, pk, token, user_data):
-        return MtpUser(pk, token, user_data)
+        UserModel = get_user_model()
+        return UserModel(pk, token, user_data)

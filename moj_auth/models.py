@@ -1,4 +1,4 @@
-class MtpUser(object):
+class MojUser(object):
     """
     Authenticated user, similar to the Django one.
 
@@ -42,7 +42,7 @@ class MtpUser(object):
         return None
 
 
-class MtpAnonymousUser(object):
+class MojAnonymousUser(object):
     """
     Anonymous non-authenticated user, similar to the Django one.
 
