@@ -1,11 +1,23 @@
-Relevant Imports
-================
+Usage
+=====
 
 .. code-block:: python
 
-    moj_auth.forms.AuthenticationForm
-    moj_auth.login(request, user)
-    moj_auth.logout(request)
+    from django.conf.urls import url
+
+    from moj_auth import views
+
+    urlpatterns = [
+        url(r'^login/$', views.login, {
+            'template_name': 'login.html',
+            }, name='login'),
+        url(
+            r'^logout/$', views.logout, {
+                'template_name': 'login.html',
+                'next_page': reverse_lazy(login),
+            }, name='logout'
+        ),
+    ]
 
 
 Django Settings
@@ -30,7 +42,6 @@ user_data dict.
 
 .. code-block:: python
 
-    AUTH_USER_MODEL = 'myapp.MyCustomUser'
     MOJ_USER_MODEL = 'myapp.models.MyCustomUser'
 
 Specify the parameters of the API authentication. API_CLIENT_ID and 

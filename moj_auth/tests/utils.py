@@ -13,3 +13,13 @@ def generate_tokens(**kwargs):
     }
     defaults.update(kwargs)
     return defaults
+
+class DummyTemplateLoader():
+
+    is_usable = True
+
+    def __call__(self, x, y):
+        return self.load_template()
+
+    def load_template(self):
+        return "dummy", None
