@@ -15,9 +15,11 @@ setup(
     license='BSD License',
     description='Authentication backend for MoJ OAuth services',
     long_description=README,
-    install_requires=['Django==1.8.3', 'slumber==0.7.1', 'requests-oauthlib==0.5.0'],
+    install_requires=['Django>=1.8', 'slumber>=0.7', 'requests-oauthlib>=0.5'],
     classifiers=[
         'Framework :: Django',
         'Intended Audience :: MoJ Developers',
     ],
+    test_suite='runtests.runtests',
+    tests_require=['mock==1.0.1', 'responses>=0.4.0']
 )
