@@ -1,6 +1,10 @@
 from django.utils.functional import SimpleLazyObject
+from django.http import HttpResponseRedirect
+from django.conf import settings
+from django.core.urlresolvers import reverse
 
 from . import get_user as auth_get_user
+from .exceptions import Unauthorized
 
 
 def get_user(request):
@@ -21,3 +25,8 @@ class AuthenticationMiddleware(object):
     """
     def process_request(self, request):
         request.user = SimpleLazyObject(lambda: get_user(request))
+
+    def process_exception(self, request, exception):
+        if isinstance(exception, Unauthorized):
+            return HttpResponseRedirect(reverse(settings.LOGIN_URL))
+        return None

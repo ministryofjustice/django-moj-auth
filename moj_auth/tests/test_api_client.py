@@ -4,10 +4,10 @@ import responses
 import datetime
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
 from django.test.testcases import SimpleTestCase
 
 from moj_auth.api_client import REQUEST_TOKEN_URL, authenticate, get_connection
+from moj_auth.exceptions import Unauthorized
 
 from .utils import generate_tokens
 
@@ -15,7 +15,7 @@ from .utils import generate_tokens
 class AuthenticateTestCase(SimpleTestCase):
 
     @responses.activate
-    def test_invalid_credentials(self):
+    def test_invalid_credentials_raise_unauthorized(self):
         # mock the response, return 401
         responses.add(
             responses.POST,
@@ -24,12 +24,9 @@ class AuthenticateTestCase(SimpleTestCase):
             content_type='application/json'
         )
 
-        # authenticate, should return None
-        token = authenticate(
-            'my-username', 'invalid-password'
+        self.assertRaises(
+            Unauthorized, authenticate, 'my-username', 'invalid-password'
         )
-
-        self.assertEqual(token, None)
 
     @responses.activate
     def test_success(self):
@@ -69,7 +66,7 @@ class AuthenticateTestCase(SimpleTestCase):
         self.assertDictEqual(data['token'], expected_token)
         self.assertDictEqual(data['user_data'], expected_user_data)
 
-    def test_error_if_http_instead_of_https(self):
+    def test_http_instead_of_https_raises_insecure_transport_error(self):
         """
         Test that if env var OAUTHLIB_INSECURE_TRANSPORT == False
         `authenticate` raises an exception if accessing the api
@@ -107,15 +104,60 @@ class GetConnectionTestCase(SimpleTestCase):
             base_url=settings.API_URL
         )
 
-    def test_fail_without_logged_in_user(self):
+    def test_without_logged_in_user_raises_unauthorized(self):
         """
         If request.user is None, the get_connection raises
-        PermissionDenied.
+        Unauthorized.
         """
         self.request.user = None
 
         self.assertRaises(
-            PermissionDenied, get_connection, self.request
+            Unauthorized, get_connection, self.request
+        )
+
+    @responses.activate
+    def test_refresh_token_failing_raises_unauthorized(self):
+        def build_expires_at(dt):
+            return (
+                dt - datetime.datetime(1970, 1, 1)
+            ).total_seconds()
+
+        # dates
+        now = datetime.datetime.now()
+        one_day_delta = datetime.timedelta(days=1)
+
+        expired_yesterday = build_expires_at(now - one_day_delta)
+
+        # set access_token.expires_at to yesterday
+        self.request.user.token['expires_at'] = expired_yesterday
+
+        # mock the refresh token endpoint, return 401
+        responses.add(
+            responses.POST,
+            REQUEST_TOKEN_URL,
+            status=401,
+            content_type='application/json'
+        )
+
+        # test
+        conn = get_connection(self.request)
+        self.assertRaises(
+            Unauthorized, conn.test.get
+        )
+
+    @responses.activate
+    def test_invalid_access_token_raises_unauthorized(self):
+        # mock the response, return 401
+        responses.add(
+            responses.GET,
+            self.test_endpoint,
+            status=401,
+            content_type='application/json'
+        )
+
+        conn = get_connection(self.request)
+        self.assertRaises(
+            Unauthorized, conn.test.get
         )
 
     @responses.activate
