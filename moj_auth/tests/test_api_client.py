@@ -15,7 +15,7 @@ from .utils import generate_tokens
 class AuthenticateTestCase(SimpleTestCase):
 
     @responses.activate
-    def test_invalid_credentials(self):
+    def test_invalid_credentials_raise_unauthorized(self):
         # mock the response, return 401
         responses.add(
             responses.POST,
@@ -24,7 +24,6 @@ class AuthenticateTestCase(SimpleTestCase):
             content_type='application/json'
         )
 
-        # authenticate, should raise Unauthorized
         self.assertRaises(
             Unauthorized, authenticate, 'my-username', 'invalid-password'
         )
@@ -67,7 +66,7 @@ class AuthenticateTestCase(SimpleTestCase):
         self.assertDictEqual(data['token'], expected_token)
         self.assertDictEqual(data['user_data'], expected_user_data)
 
-    def test_error_if_http_instead_of_https(self):
+    def test_http_instead_of_https_raises_insecure_transport_error(self):
         """
         Test that if env var OAUTHLIB_INSECURE_TRANSPORT == False
         `authenticate` raises an exception if accessing the api
@@ -105,7 +104,7 @@ class GetConnectionTestCase(SimpleTestCase):
             base_url=settings.API_URL
         )
 
-    def test_fail_without_logged_in_user(self):
+    def test_without_logged_in_user_raises_unauthorized(self):
         """
         If request.user is None, the get_connection raises
         Unauthorized.
@@ -117,7 +116,7 @@ class GetConnectionTestCase(SimpleTestCase):
         )
 
     @responses.activate
-    def test_if_refresh_token_fails_unauthorized_is_raised(self):
+    def test_refresh_token_failing_raises_unauthorized(self):
         def build_expires_at(dt):
             return (
                 dt - datetime.datetime(1970, 1, 1)
@@ -147,7 +146,7 @@ class GetConnectionTestCase(SimpleTestCase):
         )
 
     @responses.activate
-    def test_with_invalid_access_token(self):
+    def test_invalid_access_token_raises_unauthorized(self):
         # mock the response, return 401
         responses.add(
             responses.GET,
