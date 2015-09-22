@@ -19,6 +19,17 @@ class MojUser(object):
     def is_authenticated(self, *args, **kwargs):
         return True
 
+    def get_all_permissions(self, obj=None):
+        return self.user_data.get('permissions', [])
+
+    def has_perm(self, perm, obj=None):
+        return perm in self.user_data.get('permissions', [])
+
+    def has_perms(self, perm_list, obj=None):
+        return all(
+            [perm in self.user_data.get('permissions', []) for perm in perm_list]
+        )
+
     @property
     def username(self):
         return self.user_data.get('username')
