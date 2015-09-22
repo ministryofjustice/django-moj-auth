@@ -112,9 +112,6 @@ def get_connection(request):
         },
         token_updater=partial(token_saver, request=request, user=user)
     )
-    session.register_compliance_hook(
-        'refresh_token_response', response_hook,
-    )
 
     return _get_slumber_connection(session)
 
