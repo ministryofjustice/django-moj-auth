@@ -33,14 +33,6 @@ class MojUser(object):
             self._full_name = ' '.join(filter(None, name_parts))
         return self._full_name
 
-    @property
-    def prison(self):
-        try:
-            return self.user_data.get('prisons', [])[0]
-        except IndexError:
-            pass
-        return None
-
 
 class MojAnonymousUser(object):
     """
