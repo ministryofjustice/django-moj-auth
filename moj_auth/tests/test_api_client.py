@@ -4,10 +4,10 @@ import responses
 import datetime
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
 from django.test.testcases import SimpleTestCase
 
 from moj_auth.api_client import REQUEST_TOKEN_URL, authenticate, get_connection
+from moj_auth.exceptions import Unauthorized
 
 from .utils import generate_tokens
 
@@ -24,12 +24,10 @@ class AuthenticateTestCase(SimpleTestCase):
             content_type='application/json'
         )
 
-        # authenticate, should return None
-        token = authenticate(
-            'my-username', 'invalid-password'
+        # authenticate, should raise Unauthorized
+        self.assertRaises(
+            Unauthorized, authenticate, 'my-username', 'invalid-password'
         )
-
-        self.assertEqual(token, None)
 
     @responses.activate
     def test_success(self):
@@ -110,12 +108,57 @@ class GetConnectionTestCase(SimpleTestCase):
     def test_fail_without_logged_in_user(self):
         """
         If request.user is None, the get_connection raises
-        PermissionDenied.
+        Unauthorized.
         """
         self.request.user = None
 
         self.assertRaises(
-            PermissionDenied, get_connection, self.request
+            Unauthorized, get_connection, self.request
+        )
+
+    @responses.activate
+    def test_if_refresh_token_fails_unauthorized_is_raised(self):
+        def build_expires_at(dt):
+            return (
+                dt - datetime.datetime(1970, 1, 1)
+            ).total_seconds()
+
+        # dates
+        now = datetime.datetime.now()
+        one_day_delta = datetime.timedelta(days=1)
+
+        expired_yesterday = build_expires_at(now - one_day_delta)
+
+        # set access_token.expires_at to yesterday
+        self.request.user.token['expires_at'] = expired_yesterday
+
+        # mock the refresh token endpoint, return 401
+        responses.add(
+            responses.POST,
+            REQUEST_TOKEN_URL,
+            status=401,
+            content_type='application/json'
+        )
+
+        # test
+        conn = get_connection(self.request)
+        self.assertRaises(
+            Unauthorized, conn.test.get
+        )
+
+    @responses.activate
+    def test_with_invalid_access_token(self):
+        # mock the response, return 401
+        responses.add(
+            responses.GET,
+            self.test_endpoint,
+            status=401,
+            content_type='application/json'
+        )
+
+        conn = get_connection(self.request)
+        self.assertRaises(
+            Unauthorized, conn.test.get
         )
 
     @responses.activate

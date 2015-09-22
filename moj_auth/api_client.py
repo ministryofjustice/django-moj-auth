@@ -7,9 +7,9 @@ from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import LegacyApplicationClient
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
 
 from . import update_token_in_session
+from .exceptions import Unauthorized
 
 
 # set insecure transport depending on settings val
@@ -20,6 +20,24 @@ if settings.OAUTHLIB_INSECURE_TRANSPORT:
 REQUEST_TOKEN_URL = '{base_url}/oauth2/token/'.format(
     base_url=settings.API_URL
 )
+
+
+def response_hook(response, *args, **kwargs):
+    if response.status_code == 401:
+        raise Unauthorized()
+    return response
+
+
+class MoJOAuth2Session(OAuth2Session):
+    def request(self, method, url, data=None, headers=None, **kwargs):
+        hooks = kwargs.get('hooks', {})
+        if 'response' not in hooks:
+            hooks['response'] = response_hook
+        kwargs['hooks'] = hooks
+
+        return super(MoJOAuth2Session, self).request(
+            method, url, data=data, headers=headers, **kwargs
+        )
 
 
 def authenticate(username, password):
@@ -34,7 +52,7 @@ def authenticate(username, password):
         if the authentication succeeds
         None if the authentication fails
     """
-    session = OAuth2Session(
+    session = MoJOAuth2Session(
         client=LegacyApplicationClient(
             client_id=settings.API_CLIENT_ID
         )
@@ -71,20 +89,20 @@ def get_connection(request):
     Returns a slumber connection configured using the token of the
     logged-in user.
 
-    It raises `django.core.exceptions.PermissionDenied` if the user
+    It raises `Unauthorized` if the user
     is not authenticated.
 
         response = get_connection(request).my_endpoint.get()
     """
     user = request.user
     if not user:
-        raise PermissionDenied(u'no such user')
+        raise Unauthorized(u'no such user')
 
     def token_saver(token, request, user):
         user.token = token
         update_token_in_session(request, token)
 
-    session = OAuth2Session(
+    session = MoJOAuth2Session(
         settings.API_CLIENT_ID,
         token=user.token,
         auto_refresh_url=REQUEST_TOKEN_URL,
@@ -93,6 +111,9 @@ def get_connection(request):
             'client_secret': settings.API_CLIENT_SECRET
         },
         token_updater=partial(token_saver, request=request, user=user)
+    )
+    session.register_compliance_hook(
+        'refresh_token_response', response_hook,
     )
 
     return _get_slumber_connection(session)
