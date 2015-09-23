@@ -48,7 +48,7 @@ def authenticate(username, password):
             token: dict containing all the data from the api
                 (access_token, refresh_token, expires_at etc.)
             user_data: dict containing user data such as
-                first_name, last_name, prisons etc.
+                first_name, last_name etc.
         if the authentication succeeds
         None if the authentication fails
     """

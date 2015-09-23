@@ -19,6 +19,17 @@ class MojUser(object):
     def is_authenticated(self, *args, **kwargs):
         return True
 
+    def get_all_permissions(self, obj=None):
+        return self.user_data.get('permissions', [])
+
+    def has_perm(self, perm, obj=None):
+        return perm in self.user_data.get('permissions', [])
+
+    def has_perms(self, perm_list, obj=None):
+        return all(
+            [perm in self.user_data.get('permissions', []) for perm in perm_list]
+        )
+
     @property
     def username(self):
         return self.user_data.get('username')
@@ -32,14 +43,6 @@ class MojUser(object):
             ]
             self._full_name = ' '.join(filter(None, name_parts))
         return self._full_name
-
-    @property
-    def prison(self):
-        try:
-            return self.user_data.get('prisons', [])[0]
-        except IndexError:
-            pass
-        return None
 
 
 class MojAnonymousUser(object):
