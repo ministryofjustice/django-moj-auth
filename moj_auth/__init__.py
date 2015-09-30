@@ -86,6 +86,7 @@ def get_user(request):
 
     return user or MojAnonymousUser()
 
+
 def get_user_model():
     try:
         return import_string(settings.MOJ_USER_MODEL)
@@ -115,3 +116,7 @@ def logout(request):
 
     if hasattr(request, 'user'):
         request.user = MojAnonymousUser()
+
+
+def urljoin(base, *parts):
+    return '/'.join([s.strip('/') for s in [base] + list(parts)]) + '/'

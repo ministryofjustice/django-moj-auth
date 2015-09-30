@@ -2,11 +2,12 @@ import mock
 import json
 import responses
 import datetime
+from importlib import reload
 
 from django.conf import settings
 from django.test.testcases import SimpleTestCase
 
-from moj_auth.api_client import REQUEST_TOKEN_URL, authenticate, get_connection
+from moj_auth import api_client, urljoin
 from moj_auth.exceptions import Unauthorized
 
 from .utils import generate_tokens
@@ -19,13 +20,13 @@ class AuthenticateTestCase(SimpleTestCase):
         # mock the response, return 401
         responses.add(
             responses.POST,
-            REQUEST_TOKEN_URL,
+            api_client.REQUEST_TOKEN_URL,
             status=401,
             content_type='application/json'
         )
 
         self.assertRaises(
-            Unauthorized, authenticate, 'my-username', 'invalid-password'
+            Unauthorized, api_client.authenticate, 'my-username', 'invalid-password'
         )
 
     @responses.activate
@@ -42,7 +43,7 @@ class AuthenticateTestCase(SimpleTestCase):
 
         responses.add(
             responses.POST,
-            REQUEST_TOKEN_URL,
+            urljoin(settings.API_URL, 'oauth2/token'),
             body=json.dumps(expected_token),
             status=200,
             content_type='application/json'
@@ -50,17 +51,14 @@ class AuthenticateTestCase(SimpleTestCase):
 
         responses.add(
             responses.GET,
-            '{base_url}/users/{username}/'.format(
-                base_url=settings.API_URL,
-                username=username
-            ),
+            urljoin(settings.API_URL, 'users/', username),
             body=json.dumps(expected_user_data),
             status=200,
             content_type='application/json'
         )
 
         # authenticate, should return authentication data
-        data = authenticate(username, 'my-password')
+        data = api_client.authenticate(username, 'my-password')
 
         self.assertEqual(data['pk'], expected_user_data.get('pk'))
         self.assertDictEqual(data['token'], expected_token)
@@ -78,9 +76,50 @@ class AuthenticateTestCase(SimpleTestCase):
             'os.environ', {'OAUTHLIB_INSECURE_TRANSPORT': ''}
         ):
             self.assertRaises(
-                InsecureTransportError, authenticate,
+                InsecureTransportError, api_client.authenticate,
                 'my-username', 'my-password'
             )
+
+    @responses.activate
+    def test_base_api_url_allows_trailing_slash(self):
+        actual_api_url = settings.API_URL
+        # set API_URL and then reload the client to generate
+        # a new REQUEST_TOKEN_URL
+        settings.API_URL = actual_api_url + '/'
+        reload(api_client)
+
+        username = 'my-username'
+
+        # mock the response, return token
+        expected_token = generate_tokens()
+        expected_user_data = {
+            'pk': 1,
+            'first_name': 'My First Name',
+            'last_name': 'My last name',
+        }
+
+        responses.add(
+            responses.POST,
+            urljoin(actual_api_url, 'oauth2/token/'),
+            body=json.dumps(expected_token),
+            status=200,
+            content_type='application/json'
+        )
+
+        responses.add(
+            responses.GET,
+            urljoin(actual_api_url, 'users/', username),
+            body=json.dumps(expected_user_data),
+            status=200,
+            content_type='application/json'
+        )
+
+        # authenticate, should complete without error
+        api_client.authenticate(username, 'my-password')
+
+        # revert changes
+        settings.API_URL = actual_api_url
+        reload(api_client)
 
 
 class GetConnectionTestCase(SimpleTestCase):
@@ -100,9 +139,7 @@ class GetConnectionTestCase(SimpleTestCase):
             )
         )
 
-        self.test_endpoint = '{base_url}/test/'.format(
-            base_url=settings.API_URL
-        )
+        self.test_endpoint = urljoin(settings.API_URL, 'test')
 
     def test_without_logged_in_user_raises_unauthorized(self):
         """
@@ -112,7 +149,7 @@ class GetConnectionTestCase(SimpleTestCase):
         self.request.user = None
 
         self.assertRaises(
-            Unauthorized, get_connection, self.request
+            Unauthorized, api_client.get_connection, self.request
         )
 
     @responses.activate
@@ -134,13 +171,13 @@ class GetConnectionTestCase(SimpleTestCase):
         # mock the refresh token endpoint, return 401
         responses.add(
             responses.POST,
-            REQUEST_TOKEN_URL,
+            api_client.REQUEST_TOKEN_URL,
             status=401,
             content_type='application/json'
         )
 
         # test
-        conn = get_connection(self.request)
+        conn = api_client.get_connection(self.request)
         self.assertRaises(
             Unauthorized, conn.test.get
         )
@@ -155,7 +192,7 @@ class GetConnectionTestCase(SimpleTestCase):
             content_type='application/json'
         )
 
-        conn = get_connection(self.request)
+        conn = api_client.get_connection(self.request)
         self.assertRaises(
             Unauthorized, conn.test.get
         )
@@ -174,7 +211,7 @@ class GetConnectionTestCase(SimpleTestCase):
         )
 
         # should return the same generated body
-        conn = get_connection(self.request)
+        conn = api_client.get_connection(self.request)
         result = conn.test.get()
 
         self.assertDictEqual(result, expected_response)
@@ -209,7 +246,7 @@ class GetConnectionTestCase(SimpleTestCase):
         new_token = generate_tokens(expires_at=expires_tomorrow)
         responses.add(
             responses.POST,
-            REQUEST_TOKEN_URL,
+            api_client.REQUEST_TOKEN_URL,
             body=json.dumps(new_token),
             status=200,
             content_type='application/json'
@@ -226,7 +263,7 @@ class GetConnectionTestCase(SimpleTestCase):
         )
 
         # test
-        conn = get_connection(self.request)
+        conn = api_client.get_connection(self.request)
         result = conn.test.get()
 
         self.assertDictEqual(result, expected_response)
