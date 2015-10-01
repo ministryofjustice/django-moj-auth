@@ -8,7 +8,7 @@ from oauthlib.oauth2 import LegacyApplicationClient
 
 from django.conf import settings
 
-from . import update_token_in_session
+from . import update_token_in_session, urljoin
 from .exceptions import Unauthorized
 
 
@@ -16,10 +16,7 @@ from .exceptions import Unauthorized
 if settings.OAUTHLIB_INSECURE_TRANSPORT:
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-
-REQUEST_TOKEN_URL = '{base_url}/oauth2/token/'.format(
-    base_url=settings.API_URL
-)
+REQUEST_TOKEN_URL = urljoin(settings.API_URL, '/oauth2/token/')
 
 
 def response_hook(response, *args, **kwargs):
