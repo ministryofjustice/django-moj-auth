@@ -77,8 +77,7 @@ def authenticate(username, password):
         #   => invalid credentials
         if hasattr(e, 'response') and e.response.status_code == 401:
             return None
-        raise(e)
-    return None
+        raise e
 
 
 def get_connection(request):
