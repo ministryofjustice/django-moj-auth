@@ -1,12 +1,12 @@
-import os
-import slumber
-from requests.exceptions import HTTPError
 from functools import partial
-
-from requests_oauthlib import OAuth2Session
-from oauthlib.oauth2 import LegacyApplicationClient
+import os
 
 from django.conf import settings
+from oauthlib.oauth2 import LegacyApplicationClient
+import requests
+from requests.exceptions import HTTPError
+from requests_oauthlib import OAuth2Session
+import slumber
 
 from . import update_token_in_session, urljoin
 from .exceptions import Unauthorized
@@ -17,6 +17,7 @@ if settings.OAUTHLIB_INSECURE_TRANSPORT:
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 REQUEST_TOKEN_URL = urljoin(settings.API_URL, '/oauth2/token/')
+REVOKE_TOKEN_URL = urljoin(settings.API_URL, '/oauth2/revoke_token/')
 
 
 def response_hook(response, *args, **kwargs):
@@ -77,8 +78,23 @@ def authenticate(username, password):
         #   => invalid credentials
         if hasattr(e, 'response') and e.response.status_code == 401:
             return None
-        raise(e)
-    return None
+        raise e
+
+
+def revoke_token(access_token):
+    """
+    Instructs the API to delete this access token
+    and associated refresh token
+    """
+    response = requests.post(
+        REVOKE_TOKEN_URL,
+        data={
+            'token': access_token,
+            'client_id': settings.API_CLIENT_ID,
+            'client_secret': settings.API_CLIENT_SECRET,
+        }
+    )
+    return response.status_code == 200
 
 
 def get_connection(request):
