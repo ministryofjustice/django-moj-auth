@@ -1,10 +1,8 @@
-import mock
-
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
 from django.utils.encoding import force_text
-from django.core.urlresolvers import set_urlconf
+import mock
 
 from moj_auth import SESSION_KEY, BACKEND_SESSION_KEY, \
     AUTH_TOKEN_SESSION_KEY, USER_DATA_SESSION_KEY

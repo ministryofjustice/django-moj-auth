@@ -14,8 +14,8 @@ def generate_tokens(**kwargs):
     defaults.update(kwargs)
     return defaults
 
-class DummyTemplateLoader():
 
+class DummyTemplateLoader():
     is_usable = True
 
     def __call__(self, x, y):
