@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-
 import os
 import sys
 
-from django.conf import settings
 import django
-
+from django.conf import settings
+from django.core.urlresolvers import reverse_lazy
 
 DEFAULT_SETTINGS = dict(
     DEBUG=True,
@@ -30,7 +29,10 @@ DEFAULT_SETTINGS = dict(
     ),
     TEMPLATE_LOADERS=(
         'moj_auth.tests.utils.DummyTemplateLoader',
-    )
+    ),
+    LOGIN_URL=reverse_lazy('login'),
+    LOGOUT_URL=reverse_lazy('logout'),
+    LOGIN_REDIRECT_URL=reverse_lazy('dummy-view'),
 )
 
 
@@ -46,15 +48,13 @@ def runtests():
     sys.path.insert(0, parent)
 
     try:
-        from django.test.runner import DiscoverRunner
-        runner_class = DiscoverRunner
+        from django.test.runner import DiscoverRunner as Runner
         test_args = ['moj_auth.tests']
     except ImportError:
-        from django.test.simple import DjangoTestSuiteRunner
-        runner_class = DjangoTestSuiteRunner
+        from django.test.simple import DjangoTestSuiteRunner as Runner
         test_args = ['tests']
 
-    failures = runner_class(
+    failures = Runner(
         verbosity=1, interactive=True, failfast=False).run_tests(test_args)
     sys.exit(failures)
 

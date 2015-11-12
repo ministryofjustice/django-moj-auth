@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-moj-auth',
-    version='0.2',
+    version='0.3',
     packages=['moj_auth', 'moj_auth.tests'],
     include_package_data=True,
     license='BSD License',
@@ -21,5 +21,5 @@ setup(
         'Intended Audience :: MoJ Developers',
     ],
     test_suite='runtests.runtests',
-    tests_require=['mock==1.0.1', 'responses>=0.4.0']
+    tests_require=['mock>=1.3', 'responses>=0.5']
 )

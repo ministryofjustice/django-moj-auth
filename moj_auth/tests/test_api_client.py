@@ -1,11 +1,11 @@
-import mock
-import json
-import responses
 import datetime
 from importlib import reload
+import json
 
 from django.conf import settings
 from django.test.testcases import SimpleTestCase
+import mock
+import responses
 
 from moj_auth import api_client, urljoin
 from moj_auth.exceptions import Unauthorized
