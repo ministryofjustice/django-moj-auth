@@ -15,7 +15,7 @@ setup(
     license='BSD License',
     description='Authentication backend for MoJ OAuth services',
     long_description=README,
-    install_requires=['Django>=1.8', 'slumber>=0.7', 'requests-oauthlib>=0.5'],
+    install_requires=['Django>=1.8,<1.9', 'slumber>=0.7', 'requests-oauthlib>=0.5'],
     classifiers=[
         'Framework :: Django',
         'Intended Audience :: MoJ Developers',
