@@ -30,18 +30,23 @@ def login(request, template_name=None,
         request.GET.get(redirect_field_name, '')
     )
 
+    def get_redirect_to():
+        # Ensure the user-originating redirection url is safe.
+        if not is_safe_url(url=redirect_to, host=request.get_host()):
+            return resolve_url(settings.LOGIN_REDIRECT_URL)
+        return redirect_to
+
+    if request.user.is_authenticated():
+        return HttpResponseRedirect(get_redirect_to())
+
     if request.method == "POST":
         form = authentication_form(request, data=request.POST)
         if form.is_valid():
 
-            # Ensure the user-originating redirection url is safe.
-            if not is_safe_url(url=redirect_to, host=request.get_host()):
-                redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
-
             # Okay, security check complete. Log the user in.
             auth_login(request, form.get_user())
 
-            return HttpResponseRedirect(redirect_to)
+            return HttpResponseRedirect(get_redirect_to())
     else:
         form = authentication_form(request)
 
