@@ -3,6 +3,8 @@ from django.http import HttpResponseRedirect
 from django.conf import settings
 from django.core.urlresolvers import reverse
 
+from moj_auth import logout
+
 from . import get_user as auth_get_user
 from .exceptions import Unauthorized
 
@@ -28,5 +30,5 @@ class AuthenticationMiddleware(object):
 
     def process_exception(self, request, exception):
         if isinstance(exception, Unauthorized):
+            logout(request)
             return HttpResponseRedirect(reverse(settings.LOGIN_URL))
-        return None
