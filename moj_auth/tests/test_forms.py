@@ -1,6 +1,7 @@
+from unittest import mock
+
 from django.test.testcases import SimpleTestCase
 from django.utils.encoding import force_text
-import mock
 
 from moj_auth.forms import AuthenticationForm
 

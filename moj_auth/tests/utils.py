@@ -1,3 +1,4 @@
+from django.template.loaders.base import Loader
 from django.utils.crypto import get_random_string
 
 
@@ -15,11 +16,10 @@ def generate_tokens(**kwargs):
     return defaults
 
 
-class DummyTemplateLoader():
+class DummyTemplateLoader(Loader):
     is_usable = True
 
-    def __call__(self, x, y):
-        return self.load_template()
-
-    def load_template(self):
-        return "dummy", None
+    def load_template_source(self, template_name, template_dirs=None):
+        if template_name == 'login.html':
+            return '{% csrf_token %}', 'dummy'
+        return 'dummy', 'dummy'
