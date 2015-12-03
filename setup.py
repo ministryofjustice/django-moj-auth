@@ -19,7 +19,8 @@ setup(
     classifiers=[
         'Framework :: Django',
         'Intended Audience :: MoJ Developers',
+        'Programming Language :: Python :: 3.4',
     ],
     test_suite='runtests.runtests',
-    tests_require=['mock>=1.3', 'responses>=0.5']
+    tests_require=['responses>=0.5']
 )

@@ -1,10 +1,10 @@
 import datetime
 from importlib import reload
 import json
+from unittest import mock
 
 from django.conf import settings
 from django.test.testcases import SimpleTestCase
-import mock
 import responses
 
 from moj_auth import api_client, urljoin

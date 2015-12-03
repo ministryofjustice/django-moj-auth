@@ -14,7 +14,7 @@ Usage
         url(
             r'^logout/$', views.logout, {
                 'template_name': 'login.html',
-                'next_page': reverse_lazy(login),
+                'next_page': reverse_lazy('login'),
             }, name='logout'
         ),
     ]
@@ -27,24 +27,28 @@ Django Settings
 
     MIDDLEWARE_CLASSES = (
         ...
+        'moj_auth.csrf.CsrfViewMiddleware',  # instead of django.middleware.csrf.CsrfViewMiddleware
+        ...
         'moj_auth.middleware.AuthenticationMiddleware',
         ...
     )
-    
+
     AUTHENTICATION_BACKENDS = (
         'moj_auth.backends.MojBackend',
     )
 
-If you wish for additional interface methods, you can extend 
+    CSRF_FAILURE_VIEW = 'moj_auth.csrf.csrf_failure'
+
+If you wish for additional interface methods, you can extend
 moj_auth.models.MojUser, and specify your subclass as MOJ_USER_MODEL.
-An example would be adding a property to access a key in the 
+An example would be adding a property to access a key in the
 user_data dict.
 
 .. code-block:: python
 
     MOJ_USER_MODEL = 'myapp.models.MyCustomUser'
 
-Specify the parameters of the API authentication. API_CLIENT_ID and 
+Specify the parameters of the API authentication. API_CLIENT_ID and
 API_CLIENT_SECRET should be unique to your application.
 
 .. code-block:: python
