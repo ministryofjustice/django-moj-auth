@@ -46,6 +46,16 @@ def csrf_failure(request, reason=''):
     return response
 
 
+def default_csrf_behaviour(view):
+    """
+    View decorator to cause CSRF middleware to behave in Django's standard
+    fashion, i.e. if not exempt and failing, present Django's error page
+    rather than the original view
+    """
+    view.no_moj_csrf = True
+    return view
+
+
 class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
     """
     Augments Django CSRF middleware to present the same failed view by turning the POST

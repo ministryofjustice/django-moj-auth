@@ -81,9 +81,10 @@ class CsrfTestCase(SimpleTestCase):
 
     @mock.patch('django.views.csrf.csrf_failure')
     def test_turning_off_csrf_failure_override(self, mocked_csrf_failure):
+        from moj_auth.csrf import default_csrf_behaviour
         from moj_auth.views import login
 
-        login.no_moj_csrf = True
+        default_csrf_behaviour(login)
         mocked_csrf_failure.return_value = HttpResponseForbidden(b'Django CSRF response')
         response = self.client.post(self.login_url, data={
             'username': 'test',
