@@ -27,6 +27,8 @@ Django Settings
 
     MIDDLEWARE_CLASSES = (
         ...
+        'moj_auth.csrf.CsrfViewMiddleware',  # instead of django.middleware.csrf.CsrfViewMiddleware
+        ...
         'moj_auth.middleware.AuthenticationMiddleware',
         ...
     )
@@ -34,6 +36,8 @@ Django Settings
     AUTHENTICATION_BACKENDS = (
         'moj_auth.backends.MojBackend',
     )
+
+    CSRF_FAILURE_VIEW = 'moj_auth.csrf.csrf_failure'
 
 If you wish for additional interface methods, you can extend
 moj_auth.models.MojUser, and specify your subclass as MOJ_USER_MODEL.
