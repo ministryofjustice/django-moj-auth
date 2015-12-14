@@ -62,7 +62,8 @@ def authenticate(username, password):
             username=username,
             password=password,
             client_id=settings.API_CLIENT_ID,
-            client_secret=settings.API_CLIENT_SECRET
+            client_secret=settings.API_CLIENT_SECRET,
+            encoding='utf-8'
         )
 
         conn = _get_slumber_connection(session)
