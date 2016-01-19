@@ -130,6 +130,28 @@ def get_connection(request):
     return _get_slumber_connection(session)
 
 
+def get_authenticated_connection(username, password):
+    """
+    Returns:
+        an authenticated slumber connection
+    """
+    session = OAuth2Session(
+        client=LegacyApplicationClient(
+            client_id=settings.API_CLIENT_ID
+        )
+    )
+
+    session.fetch_token(
+        token_url=REQUEST_TOKEN_URL,
+        username=username,
+        password=password,
+        client_id=settings.API_CLIENT_ID,
+        client_secret=settings.API_CLIENT_SECRET
+    )
+
+    return _get_slumber_connection(session)
+
+
 def _get_slumber_connection(session):
     return slumber.API(
         base_url=settings.API_URL, session=session
