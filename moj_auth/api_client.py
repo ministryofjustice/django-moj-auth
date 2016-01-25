@@ -146,7 +146,8 @@ def get_authenticated_connection(username, password):
         username=username,
         password=password,
         client_id=settings.API_CLIENT_ID,
-        client_secret=settings.API_CLIENT_SECRET
+        client_secret=settings.API_CLIENT_SECRET,
+        encoding='utf-8'
     )
 
     return _get_slumber_connection(session)
