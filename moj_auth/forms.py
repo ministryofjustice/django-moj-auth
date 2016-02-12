@@ -1,13 +1,13 @@
-from requests.exceptions import ConnectionError
-
 from django import forms
 from django.contrib.auth import authenticate
 from django.utils.translation import ugettext_lazy as _
+from form_error_reporting import GARequestErrorReportingMixin
+from requests.exceptions import ConnectionError
 
 from .exceptions import Unauthorized
 
 
-class AuthenticationForm(forms.Form):
+class AuthenticationForm(GARequestErrorReportingMixin, forms.Form):
     """
     Authentication form used for authenticating users during the login process.
     """
