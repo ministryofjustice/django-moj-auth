@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-moj-auth',
-    version='0.8',
+    version='0.9',
     author='Ministry of Justice Digital Services',
     url='https://github.com/ministryofjustice/django-moj-auth',
     packages=['moj_auth', 'moj_auth.tests'],
@@ -21,7 +21,7 @@ setup(
         'Django>=1.8',
         'slumber>=0.7',
         'requests-oauthlib>=0.5',
-        'django-form-error-reporting==0.2',
+        'django-form-error-reporting>=0.2',
     ],
     classifiers=[
         'Framework :: Django',
