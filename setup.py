@@ -21,7 +21,7 @@ setup(
         'Django>=1.8',
         'slumber>=0.7',
         'requests-oauthlib>=0.5',
-        'git+git://github.com/ministryofjustice/django-form-error-reporting.git',
+        'django-form-error-reporting==0.2',
     ],
     classifiers=[
         'Framework :: Django',
