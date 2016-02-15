@@ -9,16 +9,25 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-moj-auth',
-    version='0.7',
+    version='0.8',
+    author='Ministry of Justice Digital Services',
+    url='https://github.com/ministryofjustice/django-moj-auth',
     packages=['moj_auth', 'moj_auth.tests'],
     include_package_data=True,
-    license='BSD License',
+    license='MIT',
     description='Authentication backend for MoJ OAuth services',
     long_description=README,
-    install_requires=['Django>=1.8', 'slumber>=0.7', 'requests-oauthlib>=0.5'],
+    install_requires=[
+        'Django>=1.8',
+        'slumber>=0.7',
+        'requests-oauthlib>=0.5',
+        'git+git://github.com/ministryofjustice/django-form-error-reporting.git',
+    ],
     classifiers=[
         'Framework :: Django',
         'Intended Audience :: MoJ Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.4',
     ],
     test_suite='runtests.runtests',
