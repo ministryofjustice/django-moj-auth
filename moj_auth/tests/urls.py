@@ -10,8 +10,19 @@ urlpatterns = [
         }, name='login'),
     url(
         r'^logout/$', views.logout, {
-            'template_name': 'login.html',
+            'template_name': 'logout.html',
             'next_page': 'dummy-view',
         }, name='logout'
+    ),
+    url(
+        r'^password_change/$', views.password_change, {
+            'template_name': 'login.html',
+        }, name='password_change'
+    ),
+    url(
+        r'^password_change_done/$', views.password_change_done, {
+            'template_name': 'done.html',
+        },
+        name='password_change_done'
     ),
 ]

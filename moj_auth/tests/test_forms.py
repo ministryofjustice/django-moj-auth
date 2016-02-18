@@ -3,7 +3,7 @@ from unittest import mock
 from django.test.testcases import SimpleTestCase
 from django.utils.encoding import force_text
 
-from moj_auth.forms import AuthenticationForm
+from moj_auth.forms import AuthenticationForm, PasswordChangeForm
 
 
 @mock.patch('moj_auth.forms.authenticate')
@@ -55,3 +55,39 @@ class AuthenticationFormTestCase(SimpleTestCase):
         self.assertEqual(form.non_field_errors(), [])
 
         mocked_authenticate.assert_called_with(**self.credentials)
+
+
+@mock.patch('moj_auth.forms.api_client')
+class PasswordChangeFormTestCase(SimpleTestCase):
+
+    def test_change_password(self, mock_api_client):
+        conn = mock_api_client.get_connection()
+
+        form = PasswordChangeForm(
+            None,
+            data={
+                'old_password': 'old',
+                'new_password1': 'new',
+                'new_password2': 'new'
+            }
+        )
+
+        self.assertTrue(form.is_valid())
+        conn.change_password.post.assert_called_once_with({
+            'old_password': 'old', 'new_password': 'new'
+        })
+
+    def test_non_matching_new_passwords_fail(self, mock_api_client):
+        conn = mock_api_client.get_connection()
+
+        form = PasswordChangeForm(
+            None,
+            data={
+                'old_password': 'old',
+                'new_password1': 'new1',
+                'new_password2': 'new2'
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertFalse(conn.change_password.post.called)

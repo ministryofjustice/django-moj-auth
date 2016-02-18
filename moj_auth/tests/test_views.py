@@ -6,6 +6,7 @@ from django.http.request import QueryDict
 from django.test import SimpleTestCase
 from django.utils.encoding import force_text
 import responses
+from slumber.exceptions import HttpClientError
 
 from moj_auth import SESSION_KEY, BACKEND_SESSION_KEY, \
     AUTH_TOKEN_SESSION_KEY, USER_DATA_SESSION_KEY
@@ -88,14 +89,10 @@ class LoginViewTestCase(SimpleTestCase):
         self.assertEqual(len(self.client.session.items()), 0)  # nothing in the session
 
 
-class LogoutViewTestCase(SimpleTestCase):
-    """
-    Tests the logout flow works as expected
-    """
+class AuthenticatedTestCase(SimpleTestCase):
 
     def setUp(self):
         self.login_url = reverse('login')
-        self.logout_url = reverse('logout')
 
     @mock.patch('moj_auth.backends.api_client')
     def login(self, mocked_api_client):
@@ -122,6 +119,16 @@ class LogoutViewTestCase(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
 
         return token
+
+
+class LogoutViewTestCase(AuthenticatedTestCase):
+    """
+    Tests the logout flow works as expected
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.logout_url = reverse('logout')
 
     def mock_revocation_response(self):
         responses.add(
@@ -168,3 +175,39 @@ class LogoutViewTestCase(SimpleTestCase):
             'client_secret': settings.API_CLIENT_SECRET,
         }
         self.assertDictEqual(revocation_call_data, expected_revocation_call_data)
+
+
+@mock.patch('moj_auth.forms.api_client')
+class PasswordChangeViewTestCase(AuthenticatedTestCase):
+
+    def test_password_change(self, mock_api_client):
+        self.login()
+        response = self.client.post(
+            reverse('password_change'), data={
+                'old_password': 'old',
+                'new_password1': 'new',
+                'new_password2': 'new'
+            }, follow=False
+        )
+
+        self.assertRedirects(response, reverse('password_change_done'))
+
+    def test_incorrect_password_errors(self, mock_api_client):
+        conn = mock_api_client.get_connection()
+        conn.change_password.post.side_effect = HttpClientError
+
+        self.login()
+        response = self.client.post(
+            reverse('password_change'), data={
+                'old_password': 'wrong',
+                'new_password1': 'new',
+                'new_password2': 'new'
+            }, follow=True
+        )
+
+        form = response.context_data['form']
+        self.assertFalse(form.is_valid())
+        self.assertEqual(
+            form.errors['__all__'],
+            [force_text(form.error_messages['password_incorrect'])]
+        )

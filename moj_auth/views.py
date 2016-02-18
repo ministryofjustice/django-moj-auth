@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
@@ -12,7 +14,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 
 from . import login as auth_login
 from . import logout as auth_logout
-from .forms import AuthenticationForm
+from .forms import AuthenticationForm, PasswordChangeForm
 
 
 @sensitive_post_parameters()
@@ -102,5 +104,43 @@ def logout(request, template_name=None,
 
     if current_app is not None:
         request.current_app = current_app
+
+    return TemplateResponse(request, template_name, context)
+
+
+@sensitive_post_parameters()
+@csrf_protect
+@login_required
+def password_change(request,
+                    template_name=None,
+                    post_change_redirect=None,
+                    password_change_form=PasswordChangeForm,
+                    extra_context=None):
+    if post_change_redirect is None:
+        post_change_redirect = reverse('password_change_done')
+    else:
+        post_change_redirect = resolve_url(post_change_redirect)
+    if request.method == "POST":
+        form = password_change_form(user=request.user, request=request, data=request.POST)
+        if form.is_valid():
+            return HttpResponseRedirect(post_change_redirect)
+    else:
+        form = password_change_form(user=request.user, request=request)
+    context = {
+        'form': form
+    }
+    if extra_context is not None:
+        context.update(extra_context)
+
+    return TemplateResponse(request, template_name, context)
+
+
+@login_required
+def password_change_done(request,
+                         template_name=None,
+                         extra_context=None):
+    context = {}
+    if extra_context is not None:
+        context.update(extra_context)
 
     return TemplateResponse(request, template_name, context)
