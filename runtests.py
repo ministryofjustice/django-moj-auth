@@ -28,6 +28,8 @@ DEFAULT_SETTINGS = dict(
     ),
     INSTALLED_APPS=(
         'django.contrib.sessions',
+        'django.contrib.contenttypes',
+        'django.contrib.auth',
         'moj_auth',
     ),
     TEMPLATES=[{

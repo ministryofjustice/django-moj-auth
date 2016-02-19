@@ -1,10 +1,14 @@
+import json
+
 from django import forms
 from django.contrib.auth import authenticate
 from django.utils.translation import ugettext_lazy as _
 from form_error_reporting import GARequestErrorReportingMixin
 from requests.exceptions import ConnectionError
+from slumber.exceptions import HttpClientError
 
 from .exceptions import Unauthorized
+from . import api_client
 
 
 class AuthenticationForm(GARequestErrorReportingMixin, forms.Form):
@@ -54,3 +58,53 @@ class AuthenticationForm(GARequestErrorReportingMixin, forms.Form):
 
     def get_user(self):
         return self.user_cache
+
+
+class PasswordChangeForm(GARequestErrorReportingMixin, forms.Form):
+    """
+    A form that lets a user change their password by entering their old
+    password.
+    """
+    error_messages = {
+        'password_mismatch': _('The two password fields didn’t match.'),
+        'generic': _('The service is currently unavailable.')
+    }
+    old_password = forms.CharField(label=_('Old password'),
+                                   widget=forms.PasswordInput)
+    new_password = forms.CharField(label=_('New password'),
+                                   widget=forms.PasswordInput)
+    new_password_confirmation = forms.CharField(label=_('New password confirmation'),
+                                                widget=forms.PasswordInput)
+
+    def __init__(self, request=None, user=None, *args, **kwargs):
+        self.request = request
+        self.user = user
+        super(PasswordChangeForm, self).__init__(*args, **kwargs)
+
+    def clean_new_password_confirmation(self):
+        password1 = self.cleaned_data.get('new_password')
+        password2 = self.cleaned_data.get('new_password_confirmation')
+        if password1 and password2:
+            if password1 != password2:
+                raise forms.ValidationError(
+                    self.error_messages['password_mismatch'],
+                    code='password_mismatch',
+                )
+        return password2
+
+    def clean(self):
+        if self.is_valid():
+            old_password = self.cleaned_data.get('old_password')
+            new_password = self.cleaned_data.get('new_password')
+            try:
+                api_client.get_connection(self.request).change_password.post(
+                    {'old_password': old_password, 'new_password': new_password}
+                )
+            except HttpClientError as e:
+                try:
+                    response_body = json.loads(e.content.decode('utf-8'))
+                    for field in response_body['errors']:
+                        for error in response_body['errors'][field]:
+                            self.add_error(field, error)
+                except (ValueError, KeyError):
+                    raise forms.ValidationError(self.error_messages['service_unavailable'])
