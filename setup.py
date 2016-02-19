@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-moj-auth',
-    version='0.9',
+    version='1.0',
     author='Ministry of Justice Digital Services',
     url='https://github.com/ministryofjustice/django-moj-auth',
     packages=['moj_auth', 'moj_auth.tests'],
