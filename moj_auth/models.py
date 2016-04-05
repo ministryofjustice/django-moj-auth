@@ -44,6 +44,10 @@ class MojUser(object):
             self._full_name = ' '.join(filter(None, name_parts))
         return self._full_name
 
+    @property
+    def email(self):
+        return self.user_data.get('email')
+
 
 class MojAnonymousUser(object):
     """
