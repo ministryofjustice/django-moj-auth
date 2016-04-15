@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django import forms
 from django.contrib.auth import authenticate
@@ -9,6 +10,8 @@ from slumber.exceptions import HttpClientError
 
 from .exceptions import Unauthorized
 from . import api_client
+
+logger = logging.getLogger('mtp')
 
 
 class AuthenticationForm(GARequestErrorReportingMixin, forms.Form):
@@ -66,8 +69,8 @@ class PasswordChangeForm(GARequestErrorReportingMixin, forms.Form):
     password.
     """
     error_messages = {
-        'password_mismatch': _('The two password fields didn’t match.'),
-        'generic': _('The service is currently unavailable.')
+        'password_mismatch': _('The two password fields didn’t match'),
+        'generic': _('The service is currently unavailable')
     }
     old_password = forms.CharField(label=_('Old password'),
                                    widget=forms.PasswordInput)
@@ -106,5 +109,6 @@ class PasswordChangeForm(GARequestErrorReportingMixin, forms.Form):
                     for field in response_body['errors']:
                         for error in response_body['errors'][field]:
                             self.add_error(field, error)
-                except (ValueError, KeyError):
-                    raise forms.ValidationError(self.error_messages['service_unavailable'])
+                except Exception:
+                    logger.exception('Could not display password change error')
+                    raise forms.ValidationError(self.error_messages['generic'])
