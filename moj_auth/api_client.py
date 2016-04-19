@@ -153,6 +153,14 @@ def get_authenticated_connection(username, password):
     return _get_slumber_connection(session)
 
 
+def get_unauthenticated_connection():
+    """
+    Returns:
+        an unauthenticated slumber connection
+    """
+    return slumber.API(base_url=settings.API_URL)
+
+
 def _get_slumber_connection(session):
     return slumber.API(
         base_url=settings.API_URL, session=session
