@@ -185,29 +185,28 @@ class PasswordChangeViewTestCase(AuthenticatedTestCase):
         response = self.client.post(
             reverse('password_change'), data={
                 'old_password': 'old',
-                'new_password1': 'new',
-                'new_password2': 'new'
+                'new_password': 'new',
+                'new_password_confirmation': 'new'
             }, follow=False
         )
 
         self.assertRedirects(response, reverse('password_change_done'))
 
     def test_incorrect_password_errors(self, mock_api_client):
+        error = b'{"errors":{"__all__":["Incorrect password"]}}'
         conn = mock_api_client.get_connection()
-        conn.change_password.post.side_effect = HttpClientError
+        conn.change_password.post.side_effect = HttpClientError(content=error)
 
         self.login()
         response = self.client.post(
-            reverse('password_change'), data={
+            reverse('password_change'),
+            data={
                 'old_password': 'wrong',
-                'new_password1': 'new',
-                'new_password2': 'new'
-            }, follow=True
+                'new_password': 'new',
+                'new_password_confirmation': 'new'
+            }
         )
 
         form = response.context_data['form']
         self.assertFalse(form.is_valid())
-        self.assertEqual(
-            form.errors['__all__'],
-            [force_text(form.error_messages['password_incorrect'])]
-        )
+        self.assertEqual(form.errors['__all__'], ['Incorrect password'])

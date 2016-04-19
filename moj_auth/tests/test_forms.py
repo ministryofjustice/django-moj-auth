@@ -67,8 +67,8 @@ class PasswordChangeFormTestCase(SimpleTestCase):
             None,
             data={
                 'old_password': 'old',
-                'new_password1': 'new',
-                'new_password2': 'new'
+                'new_password': 'new',
+                'new_password_confirmation': 'new'
             }
         )
 
@@ -84,8 +84,8 @@ class PasswordChangeFormTestCase(SimpleTestCase):
             None,
             data={
                 'old_password': 'old',
-                'new_password1': 'new1',
-                'new_password2': 'new2'
+                'new_password': 'new1',
+                'new_password_confirmation': 'new2'
             }
         )
 
