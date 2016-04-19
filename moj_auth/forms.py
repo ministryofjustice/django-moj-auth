@@ -112,3 +112,31 @@ class PasswordChangeForm(GARequestErrorReportingMixin, forms.Form):
                 except Exception:
                     logger.exception('Could not display password change error')
                     raise forms.ValidationError(self.error_messages['generic'])
+
+
+class ResetPasswordForm(GARequestErrorReportingMixin, forms.Form):
+    error_messages = {
+        'generic': _('The service is currently unavailable')
+    }
+    username = forms.CharField(label=_('Username'))
+
+    def __init__(self, request=None, *args, **kwargs):
+        self.request = request
+        super(ResetPasswordForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        if self.is_valid():
+            username = self.cleaned_data.get('username')
+            try:
+                api_client.get_unauthenticated_connection().reset_password.post(
+                    {'username': username}
+                )
+            except HttpClientError as e:
+                try:
+                    response_body = json.loads(e.content.decode('utf-8'))
+                    for field in response_body['errors']:
+                        for error in response_body['errors'][field]:
+                            self.add_error(field, error)
+                except Exception:
+                    logger.exception('Could not display password change error')
+                    raise forms.ValidationError(self.error_messages['generic'])

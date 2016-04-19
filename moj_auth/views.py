@@ -14,7 +14,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 
 from . import login as auth_login
 from . import logout as auth_logout
-from .forms import AuthenticationForm, PasswordChangeForm
+from .forms import AuthenticationForm, PasswordChangeForm, ResetPasswordForm
 
 
 @sensitive_post_parameters()
@@ -143,4 +143,46 @@ def password_change_done(request,
     if extra_context is not None:
         context.update(extra_context)
 
+    return TemplateResponse(request, template_name, context)
+
+
+@csrf_protect
+def reset_password(request,
+                   template_name=None,
+                   cancel_url=None,
+                   post_change_redirect=None,
+                   reset_password_form=ResetPasswordForm,
+                   extra_context=None):
+    cancel_url = resolve_url(cancel_url or '/')
+    if request.user.is_authenticated():
+        return HttpResponseRedirect(cancel_url)
+    if post_change_redirect is None:
+        post_change_redirect = reverse('reset_password_done')
+    else:
+        post_change_redirect = resolve_url(post_change_redirect)
+    if request.method == "POST":
+        form = reset_password_form(request=request, data=request.POST)
+        if form.is_valid():
+            return HttpResponseRedirect(post_change_redirect)
+    else:
+        form = reset_password_form(request=request)
+    context = {
+        'form': form,
+        'cancel_url': cancel_url,
+    }
+    context.update(extra_context or {})
+    return TemplateResponse(request, template_name, context)
+
+
+def reset_password_done(request,
+                        template_name=None,
+                        cancel_url=None,
+                        extra_context=None):
+    cancel_url = resolve_url(cancel_url or '/')
+    if request.user.is_authenticated():
+        return HttpResponseRedirect(cancel_url)
+    context = {
+        'cancel_url': cancel_url,
+    }
+    context.update(extra_context or {})
     return TemplateResponse(request, template_name, context)

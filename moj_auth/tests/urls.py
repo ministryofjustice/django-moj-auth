@@ -22,7 +22,16 @@ urlpatterns = [
     url(
         r'^password_change_done/$', views.password_change_done, {
             'template_name': 'done.html',
-        },
-        name='password_change_done'
+        }, name='password_change_done'
+    ),
+    url(
+        r'^reset-password/$', views.reset_password, {
+            'template_name': 'dummy.html',
+        }, name='reset_password'
+    ),
+    url(
+        r'^reset-password/$', views.reset_password_done, {
+            'template_name': 'dummy.html',
+        }, name='reset_password_done'
     ),
 ]
