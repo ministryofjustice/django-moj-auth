@@ -210,3 +210,29 @@ class PasswordChangeViewTestCase(AuthenticatedTestCase):
         form = response.context_data['form']
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['__all__'], ['Incorrect password'])
+
+
+@mock.patch('moj_auth.forms.api_client')
+class ResetPasswordViewTestCase(SimpleTestCase):
+    def test_reset_password(self, mock_api_client):
+        response = self.client.post(
+            reverse('reset_password'),
+            data={
+                'username': 'admin',
+            }, follow=False
+        )
+        self.assertRedirects(response, reverse('reset_password_done'))
+
+    def test_reset_password_errors(self, mock_api_client):
+        error = b'{"errors":{"username":["User not found"]}}'
+        reset_password = mock_api_client.get_unauthenticated_connection().reset_password
+        reset_password.post.side_effect = HttpClientError(content=error)
+        response = self.client.post(
+            reverse('reset_password'),
+            data={
+                'username': 'unknown',
+            }, follow=True
+        )
+        form = response.context_data['form']
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors['username'], ['User not found'])

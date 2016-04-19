@@ -2,8 +2,9 @@ from unittest import mock
 
 from django.test.testcases import SimpleTestCase
 from django.utils.encoding import force_text
+from slumber.exceptions import HttpClientError
 
-from moj_auth.forms import AuthenticationForm, PasswordChangeForm
+from moj_auth.forms import AuthenticationForm, PasswordChangeForm, ResetPasswordForm
 
 
 @mock.patch('moj_auth.forms.authenticate')
@@ -91,3 +92,17 @@ class PasswordChangeFormTestCase(SimpleTestCase):
 
         self.assertFalse(form.is_valid())
         self.assertFalse(conn.change_password.post.called)
+
+
+@mock.patch('moj_auth.forms.api_client')
+class ResetPasswordFormTestCase(SimpleTestCase):
+    def test_reset_password(self, mock_api_client):
+        form = ResetPasswordForm(request=None, data={
+            'username': 'admin'
+        })
+        self.assertTrue(form.is_valid())
+
+        reset_password = mock_api_client.get_unauthenticated_connection().reset_password
+        reset_password.post.assert_called_once_with({
+            'username': 'admin'
+        })
