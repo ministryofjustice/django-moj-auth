@@ -113,9 +113,11 @@ def logout(request, template_name=None,
 @login_required
 def password_change(request,
                     template_name=None,
+                    cancel_url=None,
                     post_change_redirect=None,
                     password_change_form=PasswordChangeForm,
                     extra_context=None):
+    cancel_url = resolve_url(cancel_url or '/')
     if post_change_redirect is None:
         post_change_redirect = reverse('password_change_done')
     else:
@@ -127,22 +129,23 @@ def password_change(request,
     else:
         form = password_change_form(user=request.user, request=request)
     context = {
-        'form': form
+        'form': form,
+        'cancel_url': cancel_url,
     }
-    if extra_context is not None:
-        context.update(extra_context)
-
+    context.update(extra_context or {})
     return TemplateResponse(request, template_name, context)
 
 
 @login_required
 def password_change_done(request,
                          template_name=None,
+                         cancel_url=None,
                          extra_context=None):
-    context = {}
-    if extra_context is not None:
-        context.update(extra_context)
-
+    cancel_url = resolve_url(cancel_url or '/')
+    context = {
+        'cancel_url': cancel_url,
+    }
+    context.update(extra_context or {})
     return TemplateResponse(request, template_name, context)
 
 
